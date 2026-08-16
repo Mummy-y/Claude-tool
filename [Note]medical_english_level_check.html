@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>医療英語レベル診断 | あなたの現在地チェック</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F1F6FC;
+    --card:#FFFFFF;
+    --ink:#152238;
+    --muted:#5B7089;
+    --blue:#1D5FC2;
+    --blue-deep:#0F3576;
+    --line:#DCE6F5;
+    --cell-blue:#DCEBFB;
+    --warm:#EAF2FD;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 100% 0%, rgba(29,95,194,0.07), transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba(29,95,194,0.05), transparent 40%);
+    color:var(--ink);
+    font-family:'Noto Sans JP', sans-serif;
+    line-height:1.75;
+    padding:32px 16px 80px;
+  }
+  .wrap{max-width:820px;margin:0 auto;}
+
+  /* ---- Header ---- */
+  header{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 28px 22px;margin-bottom:18px;
+  }
+  .head-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  h1{
+    font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:25px;margin:0 0 8px;color:var(--ink);
+    border-bottom:3px solid var(--blue);display:inline-block;padding-bottom:6px;
+  }
+  header p.tagline{margin:14px 0 4px;font-weight:700;font-size:14.5px;color:var(--blue-deep);}
+  header p.sub{margin:0;color:var(--muted);font-size:13.5px;}
+  .download-btn{
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+    background:#fff;border:1.6px solid var(--blue);color:var(--blue-deep);
+    font-family:'Noto Sans JP',sans-serif;font-weight:700;font-size:12.5px;
+    padding:9px 14px;border-radius:20px;cursor:pointer;transition:background .15s ease;
+  }
+  .download-btn:hover{background:var(--cell-blue);}
+
+  /* ---- Chevron roadmap ---- */
+  .roadmap-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px 20px 18px;margin-bottom:18px;
+  }
+  .roadmap-title{font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;margin:0 0 14px;text-transform:uppercase;}
+  .chevron-scroll{overflow-x:auto;padding-top:26px;padding-bottom:4px;}
+  .chevron-row{display:flex;min-width:620px;}
+  .chevron-seg{
+    flex:1;min-width:0;height:76px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#fff;text-align:center;padding:0 16px;position:relative;
+    clip-path:polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%, 18px 50%);
+    margin-left:-18px;
+    transition:filter .3s ease, opacity .35s ease;
+    opacity:.4;
+  }
+  .chevron-seg:first-child{
+    clip-path:polygon(0 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 0 100%);
+    margin-left:0;
+  }
+  .chevron-seg .num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:15px;line-height:1;}
+  .chevron-seg .title{font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:12px;margin-top:3px;line-height:1.35;}
+  .chevron-seg.done{opacity:.75;}
+  .chevron-seg.current{opacity:1;filter:brightness(1.12);box-shadow:0 0 0 3px rgba(255,255,255,0.55) inset;}
+  .pin2{
+    position:absolute;top:-24px;left:50%;transform:translateX(-50%);
+    background:var(--blue-deep);color:#fff;font-size:10.5px;font-weight:700;
+    padding:3px 9px;border-radius:6px;white-space:nowrap;opacity:0;transition:opacity .3s ease;
+  }
+  .pin2.show{opacity:1;}
+  .scroll-hint{display:none;font-size:11px;color:var(--muted);text-align:right;margin-top:4px;}
+
+  /* ---- Progress ---- */
+  .progress-row{
+    display:flex;align-items:center;gap:12px;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:12px 18px;margin-bottom:18px;position:sticky;top:12px;z-index:5;
+  }
+  .progress-label{font-size:12.5px;color:var(--muted);white-space:nowrap;}
+  .progress-label b{color:var(--ink);font-family:'IBM Plex Mono',monospace;}
+  .progress-track{flex:1;height:8px;border-radius:6px;background:var(--line);overflow:hidden;}
+  .progress-fill{height:100%;width:0%;background:var(--blue);border-radius:6px;transition:width .35s ease;}
+
+  /* ---- Quiz ---- */
+  .quiz-block{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    margin-bottom:14px;overflow:hidden;
+  }
+  .quiz-head{padding:16px 20px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .cat-tag{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#fff;
+    padding:4px 10px;border-radius:20px;flex-shrink:0;
+  }
+  .qnum-tag{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+  .quiz-head h2{font-family:'Zen Kaku Gothic New',sans-serif;font-size:15px;margin:0;color:var(--ink);flex:1;}
+  .options{padding:10px 14px 14px;}
+  .opt{
+    display:flex;align-items:flex-start;gap:12px;
+    padding:13px 14px;margin:5px 0;border-radius:10px;border:1.6px solid var(--line);
+    cursor:pointer;transition:border-color .15s ease, background .15s ease;
+  }
+  .opt:hover{background:var(--cell-blue);}
+  .opt.selected{border-color:var(--blue);background:var(--cell-blue);}
+  .radio-wrap{position:relative;flex-shrink:0;margin-top:1px;}
+  .radio-dot{
+    width:18px;height:18px;border-radius:50%;border:1.8px solid #B9C9E3;
+    position:relative;transition:border-color .15s ease;
+  }
+  .radio-dot::after{
+    content:"";position:absolute;inset:3px;border-radius:50%;background:var(--blue);
+    opacity:0;transition:opacity .12s ease;
+  }
+  input[type="radio"]{position:absolute;opacity:0;width:18px;height:18px;margin:0;cursor:pointer;}
+  input[type="radio"]:checked + .radio-dot{border-color:var(--blue);}
+  input[type="radio"]:checked + .radio-dot::after{opacity:1;}
+  .opt-text{font-size:13.6px;color:var(--ink);}
+
+  /* ---- Button ---- */
+  .diagnose-btn{
+    display:block;width:100%;background:var(--blue-deep);color:#fff;border:none;border-radius:10px;
+    font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:16px;
+    padding:16px;cursor:pointer;letter-spacing:.02em;transition:background .15s ease, transform .1s ease;
+  }
+  .diagnose-btn:hover{background:var(--blue);}
+  .diagnose-btn:active{transform:scale(0.99);}
+  .diagnose-btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px;}
+  .validation-msg{
+    display:none;background:#FDECEC;border:1px solid #F0B7B7;color:#A33A3A;
+    font-size:13px;padding:10px 14px;border-radius:8px;margin-bottom:12px;
+  }
+  .validation-msg.show{display:block;}
+
+  /* ---- Result ---- */
+  #result{margin-top:22px;display:none;}
+  #result.show{display:block;animation:fadein .45s ease;}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  .report-header{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 26px;position:relative;margin-bottom:14px;
+  }
+  .report-header::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+    border-radius:var(--radius) 0 0 var(--radius);background:var(--level-color, var(--blue));
+  }
+  .report-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.08em;}
+  .level-badge{
+    display:block;font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:21px;
+    color:var(--level-color, var(--blue-deep));margin:8px 0 6px;line-height:1.4;
+  }
+  .goal-line{
+    font-size:13.5px;color:var(--ink);background:var(--cell-blue);
+    border-radius:8px;padding:10px 14px;margin-top:10px;
+  }
+  .goal-line b{color:var(--blue-deep);}
+
+  .section-card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 24px;margin-bottom:14px;position:relative;
+  }
+  .section-card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+    border-radius:var(--radius) 0 0 var(--radius);background:var(--level-color, var(--blue));
+  }
+  .section-title{
+    font-family:'Zen Kaku Gothic New',sans-serif;font-weight:700;font-size:15.5px;
+    color:var(--ink);margin:0 0 4px;display:flex;align-items:center;gap:8px;
+  }
+  .section-num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:50%;background:var(--level-color, var(--blue));
+    color:#fff;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;flex-shrink:0;
+  }
+  .section-sub{font-size:12px;color:var(--muted);margin:0 0 14px;}
+
+  .bd-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .bd-chip{
+    font-size:12px;padding:5px 10px;border-radius:20px;background:var(--bg);
+    border:1px solid var(--line);color:var(--muted);
+  }
+  .bd-chip.weak{background:#FDECEC;border-color:#F0B7B7;color:#A33A3A;font-weight:600;}
+  .bd-chip.mind{background:#F0EAFB;border-color:#D9C6F0;color:#6B4C9A;}
+
+  .challenge-box{
+    background:var(--bg);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;
+  }
+  .challenge-box .cb-label{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--muted);
+    letter-spacing:.05em;margin-bottom:6px;display:block;
+  }
+  .challenge-box p{margin:0;font-size:13.8px;color:var(--ink);}
+
+  .io-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+  .io-card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  .io-card .io-label{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.05em;
+    margin-bottom:6px;display:block;
+  }
+  .io-card.input .io-label{color:#7C95B8;}
+  .io-card.output .io-label{color:var(--blue-deep);}
+  .io-card p{margin:0;font-size:13.5px;color:var(--ink);}
+  .next-step p{margin:0;font-size:13.8px;color:var(--ink);}
+  .next-step strong{color:var(--level-color, var(--blue-deep));}
+
+  .mindset-box{
+    background:var(--warm);border:1.6px solid var(--line);border-radius:10px;
+    padding:14px 16px;
+  }
+  .mindset-box p{margin:0 0 10px;font-size:13.8px;color:var(--ink);}
+  .mindset-box p:last-child{margin-bottom:0;}
+
+  footer{text-align:center;margin-top:26px;font-size:12px;color:var(--muted);}
+
+  @media (max-width:480px){
+    header{padding:20px 18px 16px;}
+    h1{font-size:20px;}
+    .quiz-head{padding:14px 16px 8px;}
+    .options{padding:8px 10px 12px;}
+    .scroll-hint{display:block;}
+    .io-grid{grid-template-columns:1fr;}
+    .section-card{padding:18px 16px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="head-top">
+      <div>
+        <h1>医療英語レベル診断</h1>
+        <p class="tagline">「知っている英語」を「使える医療英語」へ</p>
+        <p class="sub">全10問、すべて4択。気負わず、正直に選んでください。あなたの今の「現在地」が見えてきます。</p>
+      </div>
+      <button class="download-btn" id="downloadBtn" title="このツール(HTMLファイル)を保存できます">📥 このツールをダウンロード</button>
+    </div>
+  </header>
+
+  <div class="roadmap-card">
+    <p class="roadmap-title">Learning Roadmap</p>
+    <div class="chevron-scroll">
+      <div class="chevron-row" id="chevronRow"></div>
+    </div>
+    <p class="scroll-hint">← 横にスクロールできます →</p>
+  </div>
+
+  <div class="progress-row">
+    <span class="progress-label">回答済み <b><span id="answeredNum">0</span>/<span id="totalNum">10</span></b></span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <form id="quizForm"></form>
+
+  <p class="validation-msg" id="validationMsg">すべての質問に回答してから診断してください。</p>
+  <button class="diagnose-btn" id="diagnoseBtn">診断する</button>
+
+  <div id="result"></div>
+
+  <footer>この診断は学習の目安です。より正確な到達度の確認は、個別のカウンセリングをご活用ください。</footer>
+</div>
+
+<script>
+/* ---------------------------------------------------
+   ロードマップ データ（画像の内容に準拠）
+   outputChallenge: そのフェーズのインプットレベルが、
+   臨床・実践の場でどんな課題として表れやすいかを言語化したもの
+   --------------------------------------------------- */
+const steps = [
+  { title:"基礎英語", fullTitle:"①基礎英語", color:"#5B8DD9",
+    goal:"基礎英語を復習、医療現場での使い方を理解する",
+    input:"基本動詞・基本文法が医療現場でどのように使われるかを理解する",
+    output:"自分の担当業務をシンプルな英語で説明できる",
+    outputChallenge:"基本的な文法・語彙の土台がまだ不安定な段階のため、実践の場では「言いたいことがあっても、とっさに単語や文が出てこない」「簡単な一文を組み立てるのに時間がかかり、会話のテンポについていけない」といった形で表出しやすくなります。" },
+  { title:"医療英語", fullTitle:"②医療英語", color:"#3E74C9",
+    goal:"医療現場で使われる専門用語を理解する",
+    input:"解剖・生理・症状・病名などの専門用語を正しく理解する",
+    output:"専門用語を適切なフレーズに組み込み、現場で自然に表現できる",
+    outputChallenge:"専門用語の理解は進んでいる一方で、それを自然な文として運用する力が追いついていないため、「単語は知っているのに文章としてスムーズに出てこない」「直訳のような不自然な言い回しになる」「専門用語混じりの会話を聞き取るのに一呼吸おいてしまう」といった課題が出やすい段階です。" },
+  { title:"基礎と専門の統合（説明）", fullTitle:"③基礎と専門の統合（説明）", color:"#2C5FB8",
+    goal:"患者さん／同僚に分かりやすく伝えられる",
+    input:"専門的な説明と患者さん向けの平易な説明の違いを理解する",
+    output:"相手（患者さん／医療関係者）に合わせて言葉を選び、説明できる",
+    outputChallenge:"専門的な説明と平易な説明の違いは理解できてきているものの、その場で瞬時に言葉を選び替える力がまだ発展途上のため、「患者さん向けに言い換えるべき場面でも、つい専門用語のまま話してしまう」「相手の反応を見ながら説明を調整するのに時間がかかる」といった課題として表れやすくなります。" },
+  { title:"対話（問診）", fullTitle:"④対話（問診）", color:"#1D4A9E",
+    goal:"患者さんから必要な情報を引き出せる",
+    input:"患者さんの曖昧な表現や話し方から、真の意図や状態を理解する",
+    output:"適切な質問で情報を深掘りし、主訴や経過を正確に記録・カルテ化できる",
+    outputChallenge:"曖昧な表現から真意を汲み取る理解力が発展段階にあるため、実際の問診では「患者さんの言葉が曖昧なときに聞き返しが増える」「もう一歩深掘りする質問がとっさに出てこない」「聞き取った内容を正確に記録・カルテ化するのに時間がかかる」といった課題が起こりやすくなります。" },
+  { title:"提案", fullTitle:"⑤提案", color:"#0F3576",
+    goal:"根拠に基づいた適切な提案・助言ができる",
+    input:"相手の意向や医学的根拠（エビデンス）を正確に理解する",
+    output:"状況に応じた提案や助言を行い、紹介状や報告書を適切に作成できる",
+    outputChallenge:"根拠と患者さんの意向を統合的に理解する力は身についてきていますが、それを提案という形にその場で組み立てる部分に伸びしろが残っていることが多く、「口頭での提案や交渉の場で適切な表現がとっさに出てこない」「紹介状・報告書の構成を考えるのに時間がかかる」といった課題として表れやすくなります。" }
+];
+
+/* ---------------------------------------------------
+   10問・4択のデータ
+   選択肢の共通基準：1=まったくできない／2=かぎられたものならできる／
+                     3=けっこうできる／4=かなりできる・問題ない
+   --------------------------------------------------- */
+const quiz = [
+  { name:"hurdle", category:"はじめに", color:"#7C95B8",
+    question:"ぶっちゃけ、普段の生活や仕事で英語に触れるとき、どう感じますか？",
+    options:[
+      { text:"正直、英文を見ただけで鳥肌が立つレベルで苦手。できることなら一生避けたい🤣", value:1 },
+      { text:"必要性は感じるし少しは話せるようになりたいけど、いざ外国人を前にすると緊張して頭が真っ白になる。", value:2 },
+      { text:"完璧ではないけれど、英語を話したり読んだりすること自体への抵抗感やアレルギーは特にない。", value:3 },
+      { text:"英語でコミュニケーションをとることに全く抵抗はなく、むしろ積極的に使っていきたい。", value:4 }
+    ]
+  },
+  { name:"reading1", category:"リーディング（読む）", color:"#57A0E0",
+    question:"医療英語の「単語や専門用語」を読むとき、今の状態に一番近いのはどれですか？",
+    options:[
+      { text:"admissionとか言われても普通の英語の単語すら危ういので、医療英語の単語なんて未知の世界すぎる……。", value:1 },
+      { text:"解剖名（臓器など）や代表的な病名などの基本用語であれば、見ればある程度意味がわかる。", value:2 },
+      { text:"専門書などの難しい解説だけでなく、患者さん向けの平易な説明文（パンフレットなど）もスムーズに読み分けられる。", value:3 },
+      { text:"最新の海外の医学論文や、専門的な医療文書の単語も、辞書なしでスラスラ理解できる。", value:4 }
+    ]
+  },
+  { name:"reading2", category:"リーディング（読む）", color:"#57A0E0",
+    question:"医療に関する「文書（カルテや紹介状、ニュース）」を読むとき、どうですか？",
+    options:[
+      { text:"英語の長文を見ただけで文字が滑る。1行読むのもツラいので、カルテなんて見たら気を失いそう🤣", value:1 },
+      { text:"短い経過記録や処方箋のメモなら読めるが、正式な紹介状（Referral Letter）になると正確に読み解くのが難しい。", value:2 },
+      { text:"患者さんの紹介状から、その人の背景や医学的根拠（エビデンス）まで、一読して正確に理解できる。", value:3 },
+      { text:"どんなに複雑なカルテや長大な医療報告書であっても、細かなニュアンスまで完璧に読み解くことができる。", value:4 }
+    ]
+  },
+  { name:"listening1", category:"リスニング（聞く）", color:"#2D74D6",
+    question:"医療現場や英語の「音声」を聞いたとき、どう感じますか？",
+    options:[
+      { text:"医療英語どころか、海外ドラマの「Hello!」以外のスピードは全部呪文か宇宙語に聞こえる。", value:1 },
+      { text:"教科書通りのハッキリした医療用語なら聞き取れるが、ネイティブの速い会話や実際の現場のスピードになると厳しい。", value:2 },
+      { text:"患者さんの「なんとなくお腹がモヤモヤする」といった、曖昧な表現やニュアンス、本音までしっかり聞き取れる。", value:3 },
+      { text:"ネイティブの医師同士の早口なディスカッションや、患者さんの激しい感情混じりの訴えも完璧に聞き取れる。", value:4 }
+    ]
+  },
+  { name:"listening2", category:"リスニング（聞く）", color:"#2D74D6",
+    question:"医療シーンの「やりとり（問診など）」を聞いたとき、どうですか？",
+    options:[
+      { text:"患者さんが話し始めたら、笑顔でフリーズして心の中で「誰か助けて！」と叫ぶ自信がある。", value:1 },
+      { text:"症状の聞き取り（問診）の一問一答なら聞き取れるが、そこからさらに深い話や、同僚同士の申し送りになると聞き逃してしまう。", value:2 },
+      { text:"患者さんとの対話の中で、相手の話し方や声のトーンから、真の意図や状態を正確に理解できる。", value:3 },
+      { text:"複数人の患者さんや医療スタッフが同時に行き交う複雑な現場のやりとりも、すべて正確にキャッチできる。", value:4 }
+    ]
+  },
+  { name:"speaking1", category:"スピーキング（話す）", color:"#1651A8",
+    question:"英語で「話そう・説明しよう」とするとき、どうですか？",
+    options:[
+      { text:"単語を絞り出すのも無理。「アイ・アム・ア・ナース（ドクター）」から先が絶対に続かない。", value:1 },
+      { text:"知っている専門用語をパッと単語で並べることはできるが、文章としてスムーズに説明するのは難しい。", value:2 },
+      { text:"専門用語を使った説明だけでなく、一般の患者さん向けに「中学生でもわかるような平易な言葉」に言い換えて説明できる。", value:3 },
+      { text:"医療知識のない患者さんに対しても、複雑な病状やリスクを論理的かつ極めてスムーズに安心感を与えながら説明できる。", value:4 }
+    ]
+  },
+  { name:"speaking2", category:"スピーキング（話す）", color:"#1651A8",
+    question:"実際の現場での「対話・提案」をするとき、どうですか？",
+    options:[
+      { text:"外国人患者さんが来たら、全力で英語ができる他のスタッフの後ろに隠れるか、ジェスチャーで押し通す。", value:1 },
+      { text:"症状を聞いたり、お薬の簡単な説明をしたりする「一方通行の固定フレーズの会話」ならなんとかできる。", value:2 },
+      { text:"相手に合わせて言葉を選び、医学的根拠に基づいて「〇〇なので、こういう治療（ケア）を提案します」と自信を持って助言・提案ができる。", value:3 },
+      { text:"予期せぬトラブルや患者さんからの厳しい質問に対しても、その場で臨機応変に英語で交渉・提案ができる。", value:4 }
+    ]
+  },
+  { name:"writing1", category:"ライティング（書く）", color:"#0B3A78",
+    question:"英語で「文字や文章を書く」とき、どうですか？",
+    options:[
+      { text:"アルファベットを並べるのが苦痛。Google翻訳に日本語を丸投げして、出てきた英文を祈るようにコピペするだけ。", value:1 },
+      { text:"単語を組み合わせた短いメモや、簡単な定型文なら書けるが、自分で文章を組み立てるのにはかなり時間がかかる。", value:2 },
+      { text:"専門用語を適切なフレーズに組み込み、現場で自然に伝わる英文を自力で書くことができる。", value:3 },
+      { text:"翻訳ツールや添削なしでも、ネイティブに違和感を与えない格調高く正確なビジネス英文をスラスラ書ける。", value:4 }
+    ]
+  },
+  { name:"writing2", category:"ライティング（書く）", color:"#0B3A78",
+    question:"カルテや紹介状などの「医療文書を作成する」とき、どうですか？",
+    options:[
+      { text:"紹介状やカルテを英語で書くなんて概念、私の人生の選択肢に今まで存在しなかった。", value:1 },
+      { text:"短い経過記録（カルテ）くらいなら書けるが、正式な紹介状や報告書を、適切な構成（パラグラフなど）で書くのは難しい。", value:2 },
+      { text:"状況に応じた適切な構成で、紹介状や報告書を正確に作成・カルテ化できる。", value:3 },
+      { text:"専門的な紹介状（Referral Letter）や、カンファレンス用のサマリーを、医療業界の標準に沿って完璧に作成できる。", value:4 }
+    ]
+  },
+  { name:"mind", category:"マインド・継続", color:"#6B4C9A",
+    question:"仕事の忙しさや、これからの英語学習に対する「不安やマインド」について、一番近いものはどれですか？",
+    options:[
+      { text:"仕事が不規則で忙しく、そもそも「何から手をつければいいのか」「どう目標を立てればいいのか」という指針が全くわからない。", value:1 },
+      { text:"教材を買ったり調べたりはするけれど、シフトの忙しさに負けて三日坊主になりがちで、モチベーションを維持する自信がない。", value:2 },
+      { text:"やるべき学習の方向性さえハッキリ示してもらえれば、忙しい合間を縫ってコツコツ継続していく自信はある。", value:3 },
+      { text:"自分の弱点も目標も明確なので、ブレずに自分のペースで高い目標に向かって突き進める。", value:4 }
+    ]
+  }
+];
+
+/* ---------------------------------------------------
+   チェブロン(矢印)ロードマップ描画
+   --------------------------------------------------- */
+const chevronRow = document.getElementById('chevronRow');
+steps.forEach((s, i) => {
+  const seg = document.createElement('div');
+  seg.className = 'chevron-seg';
+  seg.id = `seg-${i}`;
+  seg.style.background = s.color;
+  seg.innerHTML = `
+    <span class="pin2" id="pin-${i}">現在地</span>
+    <span class="num">${i+1}</span>
+    <span class="title">${s.title}</span>
+  `;
+  chevronRow.appendChild(seg);
+});
+
+/* ---------------------------------------------------
+   質問フォーム描画
+   --------------------------------------------------- */
+const quizForm = document.getElementById('quizForm');
+quiz.forEach((q, qi) => {
+  const block = document.createElement('div');
+  block.className = 'quiz-block';
+  const optsHtml = q.options.map((o) => `
+    <label class="opt" data-qname="${q.name}">
+      <span class="radio-wrap">
+        <input type="radio" name="${q.name}" value="${o.value}">
+        <span class="radio-dot"></span>
+      </span>
+      <span class="opt-text">${o.text}</span>
+    </label>
+  `).join('');
+  block.innerHTML = `
+    <div class="quiz-head">
+      <span class="cat-tag" style="background:${q.color}">${q.category}</span>
+      <span class="qnum-tag">Q${qi+1}</span>
+      <h2>${q.question}</h2>
+    </div>
+    <div class="options">${optsHtml}</div>
+  `;
+  quizForm.appendChild(block);
+});
+
+/* ---------------------------------------------------
+   選択状態の見た目更新 & 進捗バー
+   --------------------------------------------------- */
+const answeredNum = document.getElementById('answeredNum');
+const progressFill = document.getElementById('progressFill');
+
+function updateProgress(){
+  let answered = 0;
+  quiz.forEach(q => {
+    const checked = quizForm.querySelector(`input[name="${q.name}"]:checked`);
+    const opts = quizForm.querySelectorAll(`.opt[data-qname="${q.name}"]`);
+    opts.forEach(o => o.classList.remove('selected'));
+    if (checked){
+      answered++;
+      checked.closest('.opt').classList.add('selected');
+    }
+  });
+  answeredNum.textContent = answered;
+  progressFill.style.width = (answered / quiz.length * 100) + '%';
+  return answered;
+}
+quizForm.addEventListener('change', updateProgress);
+updateProgress();
+
+/* ---------------------------------------------------
+   診断ロジック
+   1) 質問1(心理的ハードル)・質問10(マインド)で「1」を選んだ人 → 自動的にフェーズ①
+   2) 全体で「1」の回答数が最多の人 → 自動的にフェーズ①
+   3) それ以外は、10問の回答値(1〜4)の中で最も多い値(最頻値)をベースに判定
+      - 最頻値が「4」の場合のみ、「4」の回答数が特に多い(8問以上)ときにフェーズ⑤、
+        それ以外はフェーズ④とする
+   --------------------------------------------------- */
+function diagnose(answers){
+  const hurdleVal = answers[0];   // 質問1
+  const mindVal = answers[9];     // 質問10
+
+  const counts = {1:0, 2:0, 3:0, 4:0};
+  answers.forEach(v => counts[v]++);
+
+  let phaseIndex;
+
+  if (hurdleVal === 1 || mindVal === 1){
+    phaseIndex = 0;
+  } else if (counts[1] > counts[2] && counts[1] > counts[3] && counts[1] > counts[4]){
+    phaseIndex = 0;
+  } else {
+    let modeVal = 1, maxCount = -1;
+    [1,2,3,4].forEach(v => {
+      if (counts[v] > maxCount){ maxCount = counts[v]; modeVal = v; }
+    });
+    if (modeVal === 1) phaseIndex = 0;
+    else if (modeVal === 2) phaseIndex = 1;
+    else if (modeVal === 3) phaseIndex = 2;
+    else phaseIndex = (counts[4] >= 8) ? 4 : 3;
+  }
+
+  return { phaseIndex, counts, mindVal };
+}
+
+/* 4技能ごとの平均から「今の状態」ラベルを出す（内訳表示用） */
+function skillLabel(avg){
+  if (avg <= 1.5) return "まだこれから";
+  if (avg <= 2.5) return "かぎられたものならOK";
+  if (avg <= 3.5) return "けっこうできる";
+  return "かなりできる";
+}
+
+document.getElementById('diagnoseBtn').addEventListener('click', () => {
+  const answered = updateProgress();
+  const validationMsg = document.getElementById('validationMsg');
+
+  if (answered < quiz.length){
+    validationMsg.classList.add('show');
+    return;
+  }
+  validationMsg.classList.remove('show');
+
+  const answers = quiz.map(q => {
+    const checked = quizForm.querySelector(`input[name="${q.name}"]:checked`);
+    return parseInt(checked.value, 10);
+  });
+
+  const { phaseIndex, mindVal } = diagnose(answers);
+  const s = steps[phaseIndex];
+
+  // ロードマップ表示の更新
+  steps.forEach((st, i) => {
+    const seg = document.getElementById(`seg-${i}`);
+    const pin = document.getElementById(`pin-${i}`);
+    seg.classList.remove('done','current');
+    pin.classList.remove('show');
+    if (i < phaseIndex){ seg.classList.add('done'); }
+    else if (i === phaseIndex){ seg.classList.add('current'); pin.classList.add('show'); }
+  });
+
+  // 4技能の内訳
+  const skillAverages = {
+    "リーディング": (answers[1] + answers[2]) / 2,
+    "リスニング": (answers[3] + answers[4]) / 2,
+    "スピーキング": (answers[5] + answers[6]) / 2,
+    "ライティング": (answers[7] + answers[8]) / 2
+  };
+  const skillEntries = Object.entries(skillAverages);
+  const minSkillAvg = Math.min(...skillEntries.map(e => e[1]));
+  const weakSkillName = skillEntries.find(e => e[1] === minSkillAvg)[0];
+  const bdChips = skillEntries.map(([name, avg]) => {
+    const cls = avg === minSkillAvg ? 'bd-chip weak' : 'bd-chip';
+    return `<span class="${cls}">${name}：${skillLabel(avg)}</span>`;
+  }).join('') + `<span class="bd-chip mind">マインド・継続：${skillLabel(mindVal)}</span>`;
+
+  // 次の学習ステップ（構造的な指摘。特定サービスへの勧誘は含めない）
+  let nextStepText;
+  if (phaseIndex === steps.length - 1){
+    nextStepText = `4技能とも高い水準の回答が中心でした。次は<strong>実際の症例での実践量を増やすこと</strong>が伸びしろになります。難易度の高い症例や、専門分野に特化した表現への挑戦を通じて、さらに精度を高めていく段階です。`;
+  } else {
+    nextStepText = `4技能の中では、特に<strong>${weakSkillName}</strong>が今回の回答の中で相対的な伸びしろとして表れています。まずはこのフェーズの「インプットでやること」から着実に取り組み、土台が整ったところで「アウトプットでやること」の練習に進むと、無理なく積み上げやすくなります。`;
+  }
+
+  // マインドセット・学習環境のアドバイス（客観的な学習理論としての説明。特定サービスへの勧誘は含めない）
+  let mindsetText;
+  if (mindVal <= 2){
+    mindsetText = `
+      <p>医療英語は範囲が広く、独学で学習計画を組み立てるのが難しい分野です。特に学習の初期〜定着期は、自己流で進めると方向性を見失いやすく、途中で挫折してしまうケースも少なくありません。</p>
+      <p>今の回答からは、学習の指針そのものに不安を感じている様子がうかがえます。まずは「何を」「どの順番で」学ぶかを明確にし、定期的に自分の学習状況を客観的に振り返れる環境を整えることが、遠回りをせず着実に力をつけていくための土台になります。</p>
+    `;
+  } else {
+    mindsetText = `
+      <p>学習の方向性さえ明確であれば、忙しい中でも着実に継続していけるタイプであることが回答からうかがえます。</p>
+      <p>一方で、医療英語は自己流の学習だと、不自然な表現や誤ったニュアンスに自分では気づきにくいという特性もあります。学習スタイルが確立するまでの間は、時々、客観的な視点でのチェックやフィードバックを受ける機会を持つと、再現性の高い上達につながりやすくなります。</p>
+    `;
+  }
+
+  const resultEl = document.getElementById('result');
+  resultEl.innerHTML = `
+    <div class="report-header" style="--level-color:${s.color}">
+      <span class="report-eyebrow">DIAGNOSIS RESULT</span>
+      <span class="level-badge">あなたの現在地は【${s.fullTitle}】フェーズです</span>
+      <div class="goal-line"><b>このフェーズの目指すゴール：</b>${s.goal}</div>
+    </div>
+
+    <div class="section-card" style="--level-color:${s.color}">
+      <p class="section-title"><span class="section-num">1</span>現在のスキル分析</p>
+      <p class="section-sub">10問の回答をもとにした、現時点でのインプット面の客観的な分析です。</p>
+      <div class="bd-row">${bdChips}</div>
+      <div class="challenge-box">
+        <span class="cb-label">インプットが実践面に与える影響</span>
+        <p>${s.outputChallenge}</p>
+      </div>
+    </div>
+
+    <div class="section-card" style="--level-color:${s.color}">
+      <p class="section-title"><span class="section-num">2</span>今後の学習ロードマップ</p>
+      <p class="section-sub">このフェーズで取り組むべきインプット・アウトプットの内容です。</p>
+      <div class="io-grid">
+        <div class="io-card input">
+          <span class="io-label">INPUT／インプットでやること</span>
+          <p>${s.input}</p>
+        </div>
+        <div class="io-card output">
+          <span class="io-label">OUTPUT／アウトプットでやること</span>
+          <p>${s.output}</p>
+        </div>
+      </div>
+      <div class="next-step"><p>${nextStepText}</p></div>
+    </div>
+
+    <div class="section-card" style="--level-color:${s.color}">
+      <p class="section-title"><span class="section-num">3</span>マインドセット・学習環境のアドバイス</p>
+      <div class="mindset-box">${mindsetText}</div>
+    </div>
+  `;
+  resultEl.classList.add('show');
+  resultEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+});
+
+/* ---------------------------------------------------
+   このツール(HTML)自体をダウンロードするボタン
+   --------------------------------------------------- */
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'medical_english_level_check.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
